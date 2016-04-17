@@ -25,6 +25,8 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         sub_4 = "CHEMISTRY|^1"
         sub_5 = "\\(Cb\\)"
         
+        
+        
 # Get Job data    
         myPO <- grep(sub_1,myData$V1)
         my_PO <- myData[c(myPO+1),]
@@ -33,15 +35,15 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         myHeat <- grep(sub_3,myData$V1)
         my_Heat <- myData[c(myHeat+1),]
         
-                rm("sub_1","sub_2","sub_3","myPO","myAlloy","myHeat")
+                #rm("sub_1","sub_2","sub_3","myPO","myAlloy","myHeat")
 #get Chemistry 
         trim_1 <-  grep(sub_5,myData$V1) 
-        trim_2 <-  grep(" –",myData$V1)
+        trim_2 <-  grep(" -",myData$V1)
         myData$V1<- str_trim(clean(myData$V1))
         myData$V1[trim_1] <- str_replace_all(myData$V1[trim_1], sub_5, "")
                 
         
-        myData$V1 <- str_replace_all(myData$V1, " –", "")
+        myData$V1 <- str_replace_all(myData$V1, " -", "")
         Chem_start_stop <-  grep(sub_4,myData$V1)
         my_chem <- myData[c(Chem_start_stop[1]+2):c(Chem_start_stop[2]-1),]
         my_chem<- str_trim(clean(my_chem))
@@ -51,13 +53,18 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         
         chem_list <- word(my_chem,1)
         chem_val <- word(my_chem,2)
+        BDL <-  grep("<",chem_val)
+        chem_val <- str_replace_all(chem_val, "<", "")
+        chem_val <- as.numeric(chem_val)
         chem_min <-word(my_chem,3)
-        
+        chem_min<- as.numeric(chem_min)
         chem_max <-word(my_chem,4)
-                rm("pad_1","sub_4","Chem_start_stop","sub_5")
+              #  rm("pad_1","sub_4","Chem_start_stop","sub_5")
  
         trim_3 <- trim_2-40
         chem_max[trim_3] <-word(my_chem[trim_3],5)
-        rm("trim_1","trim_3","trim_2", "my_chem")
+        #rm("trim_1","trim_3","trim_2", "my_chem")
         
         my_chem_table <- cbind.data.frame(chem_list, chem_val, chem_min,chem_max)
+        
+        
