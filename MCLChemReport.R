@@ -1,6 +1,6 @@
-
+library(stringr)
 library(dplyr)
-
+library(qdap)
 
 setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
 
@@ -8,12 +8,13 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         labNames <- c("IMR", "NSL")
 # Read Text File into single varible table each line is a charecter string
         myData <- read.csv("BMS1008_IMR_Chem_Main_201600351.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
-#Find Lab Name
+       
+        #Find Lab Name
         myLab <- word(myData$V1[1],1)
-        labNames %in%  myLab
-        is.element(labNames,myLab)
+        theName <- labNames %in%  myLab
+        myLab <- labNames[theName]
         
-                rm("labNames")
+                rm("labNames","theName")
         
 #Find Lab Report Information from IMR
         
@@ -22,6 +23,7 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         sub_2 = "Alloy or Product"
         sub_3 = "Heat orBatch No."
         sub_4 = "CHEMISTRY|^1"
+        sub_5 = "\\(Cb\\)"
         
 # Get Job data    
         myPO <- grep(sub_1,myData$V1)
@@ -32,11 +34,30 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         my_Heat <- myData[c(myHeat+1),]
         
                 rm("sub_1","sub_2","sub_3","myPO","myAlloy","myHeat")
-#get Chemistry      
+#get Chemistry 
+        trim_1 <-  grep(sub_5,myData$V1) 
+        trim_2 <-  grep(" –",myData$V1)
+        myData$V1<- str_trim(clean(myData$V1))
+        myData$V1[trim_1] <- str_replace_all(myData$V1[trim_1], sub_5, "")
+                
+        
+        myData$V1 <- str_replace_all(myData$V1, " –", "")
         Chem_start_stop <-  grep(sub_4,myData$V1)
         my_chem <- myData[c(Chem_start_stop[1]+2):c(Chem_start_stop[2]-1),]
-        my_Chem <- strsplit(my_chem, split=" +")
-        a <- as.data.frame(my_chem)
-
-                rm("sub_4","Chem_start_stop")
+        my_chem<- str_trim(clean(my_chem))
+       
+        pad_1  <-  grep("Balance",my_chem)
+        my_chem[pad_1]<-paste(my_chem[pad_1],"NA",sep= " ")
+        
+        chem_list <- word(my_chem,1)
+        chem_val <- word(my_chem,2)
+        chem_min <-word(my_chem,3)
+        
+        chem_max <-word(my_chem,4)
+                rm("pad_1","sub_4","Chem_start_stop","sub_5")
  
+        trim_3 <- trim_2-40
+        chem_max[trim_3] <-word(my_chem[trim_3],5)
+        rm("trim_1","trim_3","trim_2", "my_chem")
+        
+        my_chem_table <- cbind.data.frame(chem_list, chem_val, chem_min,chem_max)
