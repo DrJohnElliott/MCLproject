@@ -38,7 +38,7 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
                 #rm("sub_1","sub_2","sub_3","myPO","myAlloy","myHeat")
 #get Chemistry 
         trim_1 <-  grep(sub_5,myData$V1) 
-        trim_2 <-  grep(" -",myData$V1)
+        trim_2 <-  grep(" –",myData$V1)
         myData$V1<- str_trim(clean(myData$V1))
         myData$V1[trim_1] <- str_replace_all(myData$V1[trim_1], sub_5, "")
                 
@@ -49,6 +49,7 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         my_chem<- str_trim(clean(my_chem))
        
         pad_1  <-  grep("Balance",my_chem)
+        trim_4 <- grep("Maximum", chem_max)
         my_chem[pad_1]<-paste(my_chem[pad_1],"NA",sep= " ")
         
         chem_list <- word(my_chem,1)
@@ -57,14 +58,21 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         chem_val <- str_replace_all(chem_val, "<", "")
         chem_val <- as.numeric(chem_val)
         chem_min <-word(my_chem,3)
-        chem_min<- as.numeric(chem_min)
+        
         chem_max <-word(my_chem,4)
               #  rm("pad_1","sub_4","Chem_start_stop","sub_5")
  
-        trim_3 <- trim_2-40
+        trim_3 <- trim_2-(Chem_start_stop[1] + 1)
         chem_max[trim_3] <-word(my_chem[trim_3],5)
         #rm("trim_1","trim_3","trim_2", "my_chem")
+        trim_4 <- grep("Maximum", chem_max)
+        chem_max[trim_4] <- chem_min[trim_4]
+        chem_min[trim_4] <- "NA"
         
+        chem_min<- as.numeric(chem_min)
+        chem_max<- as.numeric(chem_max)
         my_chem_table <- cbind.data.frame(chem_list, chem_val, chem_min,chem_max)
         
+        my_chem_table$chem_val <= my_chem_table$chem_max
+        my_chem_table$chem_val >= my_chem_table$chem_min
         
