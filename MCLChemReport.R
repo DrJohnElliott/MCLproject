@@ -2,19 +2,33 @@ library(stringr)
 library(dplyr)
 library(qdap)
 
-setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
+setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy/MCLproject")
 
-#Lab name Vars
-        labNames <- c("IMR", "NSL")
+
 # Read Text File into single varible table each line is a charecter string
-        myData <- read.csv("BMS1008_IMR_Chem_Main_201600351.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
-       
+       myData <- read.csv("BMS1008_IMR_Chem_Main_201600351.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
+        #myData <- read.csv("X00284_6119_BMS1008_Ingot.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
+         
 #Find Lab Name
-        myLab <- word(myData$V1[1],1)
-        theName <- labNames %in%  myLab
-        myLab <- labNames[theName]
+        myLab <- ""
+        labNames <- c("IMR", "NSL")    
+                
+        which_lab <- function( ){
+                for( i in 1:length(labNames)){
+                                myLab <-  grep(paste("^",labNames, sep="")[i],myData$V1, value = TRUE)
+                                myLab <- (word(myLab[1],1))
+                                if(is.element(myLab,labNames)){break}
+                }
+                return(word(myLab[1]))
+        }
+                
+        myLab <- which_lab()
         
-                rm("labNames","theName")
+        
+                
+                        
+        
+             #   rm("labNames","theName")
         
 #Find Lab Report Information from IMR
         
@@ -49,35 +63,41 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy")
         my_chem<- str_trim(clean(my_chem))
       
         pad_1  <-  grep("Balance",my_chem)      # Find row with "Balance"
-        trim_4 <- grep("Maximum", chem_max)     # Find rows with "Maximum"
+       # trim_4 <- grep("Maximum", chem_max)     # Find rows with "Maximum"
 # add NA as place holder         
         my_chem[pad_1]<-paste(my_chem[pad_1],"NA",sep= " ")
 
 # pull measured values chemistry from main data set       
         chem_list <- word(my_chem,1)                    #Get var names
         chem_val <- word(my_chem,2)                     #Get measured value
-        BDL <-  grep("<",chem_val)                      #Find below measurable limits
-        chem_val <- str_replace_all(chem_val, "<", "")  #Remove "<" from data values
-        chem_val <- as.numeric(chem_val)                # make numeric
+        
+        
         chem_min <-word(my_chem,3)                      # get minimum spec
         chem_max <-word(my_chem,4)                      # Get maximum spec
-               rm("pad_1","sub_4","Chem_start_stop","sub_5")
+               
  
         trim_3 <- trim_2-(Chem_start_stop[1] + 1)       # Find rows that had "-"
         chem_max[trim_3] <-word(my_chem[trim_3],5)      # Update chem_max rows that were missing values
-                rm("trim_1","trim_3","trim_2", "my_chem")
                 
 # Transfer values from chem_min to chem_max for Maximum only spec                
         trim_4 <- grep("Maximum", chem_max)             # Find rows where maximum only was specified
         chem_max[trim_4] <- chem_min[trim_4]            # Transfer value that was in chem_min to chem_max
         chem_min[trim_4] <- "NA"                        # Replace entries in chem_min with NA
-        
-        chem_min<- as.numeric(chem_min) 
-        chem_max<- as.numeric(chem_max)
-        
+   
+        BDL <-  grep("<",chem_val)                      #Find below measurable limits
+        chem_val <- str_replace_all(chem_val, "<", "")  #Remove "<" from data values
+        chem_val <- as.numeric(chem_val)                # make numeric
+        chem_min<- as.numeric(chem_min)                 # make numeric
+        chem_max<- as.numeric(chem_max)                 # make numeric
+             
+        rm("trim_1","trim_3","trim_2","trim_4", "my_chem")
+        rm("pad_1","sub_4","Chem_start_stop","sub_5")
 # Make table         
         my_chem_table <- cbind.data.frame(chem_list, chem_val, chem_min,chem_max)
-
+        
+# Make List Entry
+        Elements <- c("Ag", "Al", "As","Au","B", "Bi","C", "Cb (Nb)","Cd","Co","Cr", "Cu","Fe","Ga","Ge","Hf","Hg","In","K","Mg","Mn","Mo","N","Na","Ni", "Nv3B", "O","P","Pb","Re","S","Sb","Se","Si","Sn", "Ta","Te","Th", "Ti","Tl", "U", "W", "Zn", "Zr")
+        col_names <- c("Alloy", "Heat", "PO", "Lab", "Test Date", "Report", Elements, "Values","Min", "Max"  )
 #Logic Testing        
         my_chem_table$chem_val <= my_chem_table$chem_max
         my_chem_table$chem_val >= my_chem_table$chem_min
