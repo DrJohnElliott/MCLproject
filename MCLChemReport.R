@@ -6,8 +6,8 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy/MCLproject")
 
 
 # Read Text File into single varible table each line is a charecter string
-       myData <- read.csv("BMS1008_IMR_Chem_Main_201600351.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
-        #myData <- read.csv("X00284_6119_BMS1008_Ingot.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
+       #myData <- read.csv("BMS1008_IMR_Chem_Main_201600351.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
+        myData <- read.csv("X00284 6119 BMS1008 Ingot.txt", sep = "/", header = FALSE, fileEncoding="UTF-8-BOM",colClasses = "character")
         myData$V1<- str_trim(clean(myData$V1))  # trim white space from main data set
 #Find Lab Name
         myLab <- ""
@@ -27,8 +27,8 @@ setwd("C:/Users/John/Desktop/R-Code/Projects/MCL Reports Chromalloy/MCLproject")
 #Find Lab Report Information from IMR
         
 #Sub strings to search for         
-        sub_1 = c("PO Number","Alloy or Product","Heat orBatch No.","CHEMISTRY|^1","\\(Cb\\)")
-        sub_2 = c("PO Number:","Client Description:", "Sample No.:", "Units Method" )
+        sub_1 = c("PO Number","Alloy or Product","Heat orBatch No.","CHEMISTRY|^1","\\(Cb\\)","IMR Report Number")
+        sub_2 = c("PO Number:","Client Description:", "Sample No.:", "Units Method", "Date:", "^Methods noted|^Estimated results" )
         sub_3 = ""
         #sub_4 = ""
         #sub_5 = ""
@@ -45,19 +45,21 @@ which_job <- function(){
         myPO <- grep(my_sub[1],myData$V1)
         myAlloy <- grep(my_sub[2],myData$V1)
         myHeat <- grep(my_sub[3],myData$V1)
-        
+        myDate <- grep(my_sub[5],myData$V1)
         
         if(is.element(myLab,"IMR")){ 
                 my_PO  <- myData[c(myPO+1),] 
                 my_Alloy <- myData[c(myAlloy+1),]
                 my_Heat <- myData[c(myHeat+1),]
-                
+                report_date <- myData$V1[2]
         }else if(is.element(myLab,"NSL")){ 
                 my_PO <- word(myData$V1[myPO[1]],3) 
                 my_Alloy <- word(myData$V1[myAlloy[1]],6)
                 my_Heat <- word(myData$V1[myHeat[1]],12)
+                report_date <- c(word(myData$V1[myDate[1]],2), myData$V1[(myDate[1] +1)], myData$V1[(myDate[1] +2)])
+                report_date <- paste0(report_date, sep = "", collapse = "-")
         }
-        my_job_data <- c(my_PO, my_Alloy,my_Heat )
+        my_job_data <- c(my_PO, my_Alloy,my_Heat, report_date )
          return(my_job_data)
 }        
 
@@ -70,7 +72,6 @@ which_chem <- function(){
         if(is.element(myLab,"IMR")){
 #get Chemistry 
                 trim_1 <-  grep(my_sub[5],myData$V1)     # find location of two chem names for Nb and Cb
-                
                 myData$V1<- str_trim(clean(myData$V1))  # trim white space from main data set
 
 # Trim data strings        
@@ -85,7 +86,25 @@ which_chem <- function(){
         
         }
          else if(is.element(myLab,"NSL")){
-                  print("something")
+                 #get Chemistry 
+                 
+                 myData$V1<- str_trim(clean(myData$V1))  # trim white space from main data set
+            
+                 #find chemistry data in main data set and remove white space
+                 chem_Start <-  grep(my_sub[4],myData$V1)
+                 chem_Stop  <-  grep(my_sub[6],myData$V1)
+                 
+                 my_chem <- myData[c(chem_Start[1]+1):c(chem_Stop[1]-1),]
+                 my_chem2 <- myData[c(chem_Start[2]+1):c(chem_Stop[2]-1),]
+                 my_chem <- c(my_chem,my_chem2)
+                 
+                 sort_1 <-  grep("max:",my_chem )
+                 split_1  <-  grep("Balance",my_chem)
+                 element_list <- word(my_chem[setdiff((1:length(my_chem)), sort_1)],1)
+                 chem_val <-word(my_chem[setdiff((1:length(my_chem)), sort_1)],2)
+                 
+                 my_chem<- str_trim(clean(my_chem))
+                 return(my_chem)
                 
         }
 }     
@@ -159,7 +178,6 @@ my_data_table <- clean_Data()
         }
 return(ans)
  }
-   my_check <- check_chem()    
-        my_data_table$chem_val <= my_data_table$chem_max
-        my_data_table$chem_val >= my_data_table$chem_min
+   my_check <- check_chem()  
+  
         
