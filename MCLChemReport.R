@@ -98,12 +98,6 @@ which_chem <- function(){
                  my_chem2 <- myData[c(chem_Start[2]+1):c(chem_Stop[2]-1),]
                  my_chem <- c(my_chem,my_chem2)
                  
-                 sort_1 <-  grep("max:",my_chem )
-                 split_1  <-  grep("Balance",my_chem)
-                 element_list <- word(my_chem[setdiff((1:length(my_chem)), sort_1)],1)
-                 chem_val <-word(my_chem[setdiff((1:length(my_chem)), sort_1)],2)
-                 
-                 my_chem<- str_trim(clean(my_chem))
                  return(my_chem)
                 
         }
@@ -123,8 +117,6 @@ if(is.element(myLab,"IMR")){
 # pull measured values chemistry from main data set       
         chem_list <- word(my_chem,1)                    #Get var names
         chem_val <- word(my_chem,2)                     #Get measured value
-        
-        
         chem_min <-word(my_chem,3)                      # get minimum spec
         chem_max <-word(my_chem,4)                      # Get maximum spec
                
@@ -146,9 +138,29 @@ if(is.element(myLab,"IMR")){
         chem_max<- as.numeric(chem_max)                 # make numeric
         ND <- character(length(chem_val))
         ND[BDL]<- "BDL"
-}
-        # Make table         
+# Make table         
         my_chem_table <- cbind.data.frame(chem_list, chem_val, chem_min,chem_max, ND)
+        
+}else if(is.element(myLab,"NSL")){
+        sort_1 <-  grep("max:",my_chem )
+        split_1  <-  grep("Balance",my_chem)
+        element_list <- word(my_chem[setdiff((1:length(my_chem)), sort_1)],1)
+        chem_val <-word(my_chem[setdiff((1:length(my_chem)), sort_1)],2)
+        my_chem[split_1]<-paste(my_chem[split_1],"NA",sep= " ")
+        my_chem[split_1]<-paste(my_chem[split_1],"NA",sep= " ")
+        chem_min <- word(my_chem[setdiff((1:length(my_chem)), sort_1)],-1)
+        chem_max <- word(my_chem[sort(c(sort_1,split_1))],2)
+        BDL <-  grep("<",chem_val) 
+        chem_val <- str_replace_all(chem_val, "<", "")
+        ND <- character(length(chem_val))
+        ND[BDL]<- "BDL"
+        chem_val <- as.numeric(chem_val)                # make numeric
+        chem_min<- as.numeric(chem_min)                 # make numeric
+        chem_max<- as.numeric(chem_max)                # make numeric
+        # Make table         
+        my_chem_table <- cbind.data.frame(element_list, chem_val, chem_min,chem_max, ND)
+}
+        
         return(my_chem_table)
 }        
         
@@ -158,8 +170,8 @@ my_data_table <- clean_Data()
         rm("sub_1","sub_2","sub_3")
         
 # Make List Entry
-        Elements <- c("Ag", "Al", "As","Au","B", "Bi","C", "Cb (Nb)","Cd","Co","Cr", "Cu","Fe","Ga","Ge","Hf","Hg","In","K","Mg","Mn","Mo","N","Na","Ni", "Nv3B", "O","P","Pb","Re","S","Sb","Se","Si","Sn", "Ta","Te","Th", "Ti","Tl", "U", "W", "Zn", "Zr")
-        col_names <- c("Alloy", "Heat", "PO", "Lab", "Test Date", "Report", Elements, "Values","Min", "Max"  )
+       # Elements <- c("Ag", "Al", "As","Au","B", "Bi","C", "Cb (Nb)","Cd","Co","Cr", "Cu","Fe","Ga","Ge","Hf","Hg","In","K","Mg","Mn","Mo","N","Na","Ni", "Nv3B", "O","P","Pb","Re","S","Sb","Se","Si","Sn", "Ta","Te","Th", "Ti","Tl", "U", "W", "Zn", "Zr")
+       # col_names <- c("Alloy", "Heat", "PO", "Lab", "Test Date", "Report", Elements, "Values","Min", "Max"  )
 #Logic Testing  
         
  check_chem <- function(){
